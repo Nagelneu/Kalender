@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>La Beauté – Frisuren von Iris Janßen | iPad Monatsplaner</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Optimierungen für Touch & iPad */
+        .calendar-cell {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .calendar-cell:active {
+            transform: scale(0.97);
+        }
+        .move-target-active {
+            background-color: #fef3c7 !important;
+            border-color: #d97706 !important;
+            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans min-h-screen select-none">
+
+    <!-- Toast Benachrichtigung -->
+    <div id="toast" class="fixed bottom-5 left-5 right-5 md:left-auto md:right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-stone-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-sm border border-stone-700">
+        <i class="fa-solid fa-circle-check text-amber-400 text-lg"></i>
+        <span id="toast-message">Erfolgreich ausgeführt!</span>
+    </div>
+
+    <!-- Header mit Original-Logo und Daten -->
+    <header class="bg-stone-900 text-stone-100 py-6 px-6 md:px-8 shadow-xl border-b border-stone-800">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            
+            <!-- Original-Logo als SVG-Grafik & Titel -->
+            <div class="flex items-center gap-4 text-center md:text-left">
+                <div class="w-16 h-16 bg-white rounded-full p-0.5 shadow-md flex items-center justify-center border-2 border-amber-600 shrink-0 mx-auto md:mx-0">
+                    <svg viewBox="0 0 200 200" class="w-full h-full">
+                        <circle cx="100" cy="100" r="92" fill="none" stroke="#1c1917" stroke-width="4"/>
+                        <circle cx="100" cy="100" r="84" fill="none" stroke="#1c1917" stroke-width="1.5" stroke-dasharray="6,3"/>
+                        <text x="100" y="62" font-family="Georgia, serif" font-weight="bold" font-size="32" text-anchor="middle" fill="#1c1917">La</text>
+                        <text x="100" y="98" font-family="Georgia, serif" font-weight="bold" font-size="32" text-anchor="middle" fill="#1c1917">Beauté</text>
+                        <text x="100" y="132" font-family="sans-serif" font-size="18" text-anchor="middle" fill="#1c1917">Frisuren</text>
+                        <text x="100" y="152" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#1c1917">von</text>
+                        <text x="100" y="174" font-family="sans-serif" font-weight="bold" font-size="18" text-anchor="middle" fill="#1c1917">Iris Janßen</text>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-serif tracking-wide text-amber-100">La Beauté</h1>
+                    <p class="text-stone-400 text-xs">Frisuren von Iris Janßen</p>
+                    <p class="text-stone-500 text-[11px] mt-0.5"><i class="fa-solid fa-location-dot text-amber-500 mr-1"></i>Michaelstr. 69 – 41460 Neuss</p>
+                </div>
+            </div>
+
+            <!-- Kontaktdaten Info-Box & Zähler -->
+            <div class="flex flex-wrap justify-center items-center gap-4 text-xs bg-stone-800/90 px-5 py-3 rounded-xl border border-stone-700 shadow-inner">
+                <div>
+                    <p class="text-stone-400"><i class="fa-solid fa-phone text-amber-500 mr-1"></i> Mobil: <span class="text-stone-200 font-semibold">0157369 595 86</span></p>
+                    <p class="text-stone-400 mt-0.5"><i class="fa-solid fa-envelope text-amber-500 mr-1"></i> E-Mail: <span class="text-stone-200 font-semibold">iris.janssen_beaute@web.de</span></p>
+                </div>
+                <div class="border-l border-stone-700 pl-4 text-center">
+                    <div class="text-amber-400 font-bold text-base" id="total-count">0</div>
+                    <div class="text-stone-400 text-[10px]">Termine gesamt</div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+        <!-- Linke Spalte: Neuer Termin & Suche -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h2 class="text-lg font-semibold mb-4 text-stone-900 border-b pb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-amber-600"></i>Neuen Termin
+                </h2>
+                
+                <form id="appointment-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Kundenname</label>
+                        <input type="text" id="client" required placeholder="z.B. Maria Schmidt" class="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Handynummer (für WhatsApp/SMS)</label>
+                        <input type="tel" id="phone" required placeholder="+491701234567" class="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">E-Mail-Adresse (für Erinnerung)</label>
+                        <input type="email" id="email" placeholder="kunde@example.com" class="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Dienstleistung</label>
+                        <select id="service" class="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white">
+                            <option value="Waschen, Schneiden & Föhnen">Waschen, Schneiden & Föhnen</option>
+                            <option value="Färben / Strähnen">Färben / Strähnen</option>
+                            <option value="Herrenhaarschnitt">Herrenhaarschnitt</option>
+                            <option value="Bartpflege & Styling">Bartpflege & Styling</option>
+                            <option value="Hochzeitsfrisur">Hochzeitsfrisur</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-medium text-stone-600 mb-1">Datum</label>
+                            <input type="date" id="date" required class="w-full px-2 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-600 mb-1">Uhrzeit</label>
+                            <input type="time" id="time" required class="w-full px-2 py-2 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none text-xs">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-stone-900 hover:bg-stone-800 text-white font-medium py-3 rounded-xl transition duration-200 shadow-md text-sm">
+                        Termin eintragen
+                    </button>
+                </form>
+            </div>
+
+            <!-- Schnellsuche -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-stone-200">
+                <label class="block text-xs font-medium text-stone-600 mb-1.5"><i class="fa-solid fa-magnifying-glass text-amber-600 mr-1"></i> Kunde suchen</label>
+                <input type="text" id="search-input" placeholder="Name eingeben..." oninput="renderCalendar()" class="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none">
+            </div>
+            
+            <!-- iPad Info-Box -->
+            <div id="info-box" class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-900 shadow-sm">
+                <i class="fa-solid fa-tablet-screen-button text-amber-600 mr-1.5 text-sm"></i> <strong>iPad-Bedienung:</strong><br>
+                Tippe auf einen Termin und danach auf einen Kalendertag, um ihn ganz einfach zu verschieben!
+            </div>
+        </div>
+
+        <!-- Rechte Spalte: Monatskalender & Tagesliste -->
+        <div class="lg:col-span-3 space-y-6">
+            
+            <!-- Monats-Navigation & Grid -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-serif font-bold text-stone-900" id="month-year-display">Monat Jahr</h2>
+                    <div class="flex gap-2">
+                        <button onclick="changeMonth(-1)" class="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button onclick="goToCurrentMonth()" class="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition">Heute</button>
+                        <button onclick="changeMonth(1)" class="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-sm font-medium transition"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- Wochentage Header -->
+                <div class="grid grid-cols-7 gap-1.5 md:gap-2 text-center font-semibold text-xs text-stone-500 mb-2">
+                    <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+                </div>
+
+                <!-- Kalender Tage Grid -->
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1.5 md:gap-2">
+                    <!-- Wird per JS befüllt -->
+                </div>
+            </div>
+
+            <!-- Liste aller Termine des gewählten Monats mit Multikanal-Erinnerung -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                <h3 class="text-lg font-semibold text-stone-900 mb-4 border-b pb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-list-check text-amber-600 mr-2"></i>Termine im gewählten Monat</span>
+                    <span id="active-move-indicator" class="text-xs text-amber-600 font-normal hidden animate-pulse">Wähle einen Zieltag im Kalender...</span>
+                </h3>
+                <div id="month-appointment-list" class="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                    <!-- Wird per JS befüllt -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // Startdaten oder localStorage
+        let appointments = JSON.parse(localStorage.getItem('salon_appointments_iris')) || [
+            { id: 1, client: "Anna Müller", phone: "+491701112233", email: "anna@example.com", service: "Waschen, Schneiden & Föhnen", date: "2026-09-25", time: "10:00" },
+            { id: 2, client: "Lukas Weber", phone: "+491704445566", email: "lukas@example.com", service: "Herrenhaarschnitt", date: "2026-09-26", time: "11:30" }
+        ];
+
+        let currentDate = new Date();
+        let selectedAppIdToMove = null; // Speichert ID für iPad-Verschiebung per Tipp
+        document.getElementById('date').valueAsDate = new Date();
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('salon_appointments_iris', JSON.stringify(appointments));
+            renderCalendar();
+        }
+
+        // Formular Absenden
+        document.getElementById('appointment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newApp = {
+                id: Date.now(),
+                client: document.getElementById('client').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                service: document.getElementById('service').value,
+                date: document.getElementById('date').value,
+                time: document.getElementById('time').value
+            };
+            appointments.push(newApp);
+            saveAndRender();
+            this.reset();
+            document.getElementById('date').valueAsDate = new Date();
+            showToast('Neuer Termin für La Beauté eingetragen!');
+        });
+
+        // Termin löschen
+        function deleteAppointment(id) {
+            if(confirm('Möchtest du diesen Termin wirklich löschen?')) {
+                appointments = appointments.filter(app => app.id !== id);
+                if(selectedAppIdToMove === id) cancelMove();
+                saveAndRender();
+                showToast('Termin gelöscht.');
+            }
+        }
+
+        // --- IPAD TOUCH VERSCHIEBE-LOGIK ---
+        function prepareMove(id, clientName) {
+            selectedAppIdToMove = id;
+            document.getElementById('active-move-indicator').classList.remove('hidden');
+            showToast(`Termin für "${clientName}" ausgewählt. Jetzt Zieltag im Kalender antippen!`);
+            renderCalendar();
+        }
+
+        function cancelMove() {
+            selectedAppIdToMove = null;
+            document.getElementById('active-move-indicator').classList.add('hidden');
+            renderCalendar();
+        }
+
+        function handleDayClick(dateStr) {
+            if (selectedAppIdToMove !== null) {
+                const app = appointments.find(a => a.id === selectedAppIdToMove);
+                if (app) {
+                    app.date = dateStr;
+                    const clientName = app.client;
+                    selectedAppIdToMove = null;
+                    document.getElementById('active-move-indicator').classList.add('hidden');
+                    saveAndRender();
+                    showToast(`Termin für ${clientName} erfolgreich auf den ${dateStr} verschoben!`);
+                }
+            }
+        }
+
+        // --- MULTIKANAL ERINNERUNGEN ---
+        function getMessageText(client, date, time, service) {
+            return `Hallo ${client}, wir erinnern dich an deinen Termin bei La Beauté – Frisuren von Iris Janßen am ${date} um ${time} Uhr (${service}). Adresse: Michaelstr. 69, Neuss. Wir freuen uns auf dich!`;
+        }
+
+        function sendWhatsApp(phone, client, date, time, service) {
+            const cleanPhone = phone.replace(/\s+/g, '');
+            const msg = getMessageText(client, date, time, service);
+            window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+            showToast('WhatsApp geöffnet.');
+        }
+
+        function sendSMS(phone, client, date, time, service) {
+            const cleanPhone = phone.replace(/\s+/g, '');
+            const msg = getMessageText(client, date, time, service);
+            window.open(`sms:${cleanPhone}?body=${encodeURIComponent(msg)}`, '_blank');
+            showToast('SMS-App geöffnet.');
+        }
+
+        function sendEmail(email, client, date, time, service) {
+            if (!email) {
+                alert('Bitte trage eine E-Mail-Adresse für diesen Kunden ein.');
+                return;
+            }
+            const subject = encodeURIComponent('Dein Termin bei La Beauté – Frisuren von Iris Janßen');
+            const body = encodeURIComponent(`Hallo ${client},\n\nwir erinnern dich herzlich an deinen Termin bei uns:\n\nDatum: ${date} um ${time} Uhr\nLeistung: ${service}\n\nSalon: La Beauté – Frisuren von Iris Janßen\nAdresse: Michaelstr. 69, 41460 Neuss\nTelefon: 0157369 595 86\n\nWir freuen uns auf deinen Besuch!\n\nLiebe Grüße\nIris Janßen`);
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            showToast('E-Mail-Programm geöffnet.');
+        }
+
+        function sendTelegram(client, date, time, service) {
+            const msg = getMessageText(client, date, time, service);
+            navigator.clipboard.writeText(msg).then(() => {
+                showToast('Text kopiert! Telegram geöffnet.');
+                window.open('https://t.me/', '_blank');
+            }).catch(err => {
+                alert('Fehler: ' + err);
+            });
+        }
+
+        // Monatswechsel
+        function changeMonth(direction) {
+            currentDate.setMonth(currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function goToCurrentMonth() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        // Kalender Rendern
+        function renderCalendar() {
+            document.getElementById('total-count').textContent = appointments.length;
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+            const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+            document.getElementById('month-year-display').textContent = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; 
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div class="h-28 md:h-32 bg-stone-50/55 rounded-xl"></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const formattedMonth = String(month + 1).padStart(2, '0');
+                const formattedDay = String(day).padStart(2, '0');
+                const dateStr = `${year}-${formattedMonth}-${formattedDay}`;
+
+                let dayApps = appointments.filter(app => app.date === dateStr);
+                if (searchQuery) {
+                    dayApps = dayApps.filter(app => app.client.toLowerCase().includes(searchQuery));
+                }
+                dayApps.sort((a, b) => a.time.localeCompare(b.time));
+
+                let appsHtml = '';
+                dayApps.forEach(app => {
+                    const isSelectedForMove = selectedAppIdToMove === app.id;
+                    const highlightClass = isSelectedForMove ? 'ring-2 ring-red-500 bg-red-50 text-red-900' : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100';
+                    
+                    appsHtml += `
+                        <div onclick="event.stopPropagation(); prepareMove(${app.id}, '${app.client}')" 
+                             class="${highlightClass} text-[10px] md:text-xs px-1.5 py-1 rounded-md truncate font-medium border transition shadow-2xs flex items-center justify-between cursor-pointer" 
+                             title="Tippen zum Verschieben">
+                            <span><b>${app.time}</b> ${app.client}</span>
+                            <i class="fa-solid fa-arrows-up-down-left-right text-amber-500 text-[9px] ml-1"></i>
+                        </div>`;
+                });
+
+                const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                let cellClass = isToday ? 'border-amber-500 bg-amber-50/30 ring-2 ring-amber-400/20' : 'border-stone-200 bg-white';
+                
+                if (selectedAppIdToMove !== null) {
+                    cellClass += ' move-target-active cursor-pointer animate-pulse';
+                }
+
+                grid.innerHTML += `
+                    <div onclick="handleDayClick('${dateStr}')" 
+                         class="calendar-cell h-28 md:h-32 p-1.5 rounded-xl border ${cellClass} flex flex-col justify-between overflow-hidden shadow-2xs">
+                        <div class="flex justify-between items-center text-xs font-semibold text-stone-700">
+                            <span class="${isToday ? 'bg-amber-500 text-white w-5 h-5 rounded-full flex items-center justify-center' : ''}">${day}</span>
+                            ${dayApps.length > 0 ? `<span class="text-[10px] bg-stone-100 px-1 rounded text-stone-500">${dayApps.length}</span>` : ''}
+                        </div>
+                        <div class="space-y-1 overflow-y-auto flex-grow mt-1 pr-0.5">
+                            ${appsHtml}
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderMonthAppointments(year, month, searchQuery);
+        }
+
+        // Monats-Terminliste rendern
+        function renderMonthAppointments(year, month, searchQuery) {
+            const container = document.getElementById('month-appointment-list');
+            const formattedMonth = String(month + 1).padStart(2, '0');
+            
+            let monthApps = appointments.filter(app => app.date.startsWith(`${year}-${formattedMonth}`));
+            if (searchQuery) {
+                monthApps = monthApps.filter(app => app.client.toLowerCase().includes(searchQuery) || app.service.toLowerCase().includes(searchQuery));
+            }
+            monthApps.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+
+            if (monthApps.length === 0) {
+                container.innerHTML = `<p class="text-xs text-stone-400 text-center py-6">Keine Termine im gewählten Zeitraum gefunden.</p>`;
+                return;
+            }
+
+            let html = '';
+            monthApps.forEach(app => {
+                const dateFormatted = new Date(app.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const isSelected = selectedAppIdToMove === app.id;
+                const cardStyle = isSelected ? 'border-amber-600 bg-amber-50/80 ring-2 ring-amber-500' : 'bg-stone-50 border-stone-200';
+
+                html += `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-3.5 border ${cardStyle} rounded-xl gap-3 transition">
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-bold text-stone-900 text-sm">${app.client}</span>
+                                <span class="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-medium">${app.service}</span>
+                                ${isSelected ? '<span class="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full animate-bounce">Wähle Zieltag...</span>' : ''}
+                            </div>
+                            <div class="text-xs text-stone-500 mt-1 flex flex-wrap gap-3">
+                                <span><i class="fa-regular fa-calendar text-amber-600 mr-1"></i>${dateFormatted}</span>
+                                <span><i class="fa-regular fa-clock text-amber-600 mr-1"></i>${app.time} Uhr</span>
+                                <span><i class="fa-solid fa-phone text-stone-400 mr-1"></i>${app.phone}</span>
+                                <span><i class="fa-solid fa-envelope text-stone-400 mr-1"></i>${app.email || 'Keine E-Mail'}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Aktions- und Erinnerungsbuttons -->
+                        <div class="flex items-center gap-1.5 w-full md:w-auto justify-end flex-wrap border-t md:border-t-0 pt-2 md:pt-0">
+                            <!-- Verschieben Button (iPad Touch) -->
+                            <button onclick="prepareMove(${app.id}, '${app.client}')" 
+                                class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="Termin verschieben">
+                                <i class="fa-solid fa-arrow-right-arrow-left"></i> Verschieben
+                            </button>
+                            <!-- WhatsApp -->
+                            <button onclick="sendWhatsApp('${app.phone}', '${app.client}', '${dateFormatted}', '${app.time}', '${app.service}')" 
+                                class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="WhatsApp senden">
+                                <i class="fa-brands fa-whatsapp"></i> WA
+                            </button>
+                            <!-- SMS -->
+                            <button onclick="sendSMS('${app.phone}', '${app.client}', '${dateFormatted}', '${app.time}', '${app.service}')" 
+                                class="bg-sky-600 hover:bg-sky-700 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="SMS senden">
+                                <i class="fa-solid fa-comment-sms"></i> SMS
+                            </button>
+                            <!-- E-Mail -->
+                            <button onclick="sendEmail('${app.email || ''}', '${app.client}', '${dateFormatted}', '${app.time}', '${app.service}')" 
+                                class="bg-stone-700 hover:bg-stone-800 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="E-Mail senden">
+                                <i class="fa-solid fa-envelope"></i> E-Mail
+                            </button>
+                            <!-- Telegram -->
+                            <button onclick="sendTelegram('${app.client}', '${dateFormatted}', '${app.time}', '${app.service}')" 
+                                class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="Telegram (kopiert Text)">
+                                <i class="fa-brands fa-telegram"></i> TG
+                            </button>
+                            <!-- Löschen -->
+                            <button onclick="deleteAppointment(${app.id})" 
+                                class="bg-stone-200 hover:bg-red-100 hover:text-red-600 text-stone-600 text-xs px-2.5 py-1.5 rounded-lg transition" title="Löschen">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Init beim Laden
+        renderCalendar();
+    </script>
+</body>
+</html>
+```[cite: 2]
